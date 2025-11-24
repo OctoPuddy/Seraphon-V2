@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Command Orders</title>
+  <meta name="viewport" content="width=1200, user-scalable=yes" />
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background-color: black;
+      overflow: auto;
+    }
+
+    .container {
+      position: relative;
+      display: inline-block;
+      width: 100%;
+    }
+
+    .full-image {
+      display: block;
+      width: 100%;
+      max-width: 1200px;
+      height: auto;
+    }
+
+    canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 10;
+      pointer-events: auto;
+    }
+
+    .home-btn {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      z-index: 50;
+      background-color: white;
+      padding: 6px;
+      border-radius: 6px;
+      box-shadow: 0 0 4px rgba(0, 0, 0, 0.4);
+      display: inline-block;
+    }
+
+    .home-btn img {
+      width: 80px;
+      height: 80px;
+    }
+
+    .toggle-draw-btn {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      z-index: 50;
+      background-color: white;
+      padding: 6px;
+      border-radius: 6px;
+      box-shadow: 0 0 4px rgba(0, 0, 0, 0.4);
+      display: inline-block;
+    }
+
+    .toggle-draw-btn img {
+      width: 80px;
+      height: 80px;
+    }
+
+    .toggle-draw-btn.disabled img {
+      filter: grayscale(100%) brightness(70%) contrast(150%) saturate(0%) sepia(100%) hue-rotate(0deg);
+      opacity: 0.4;
+    }
+
+    .reset-btn {
+      position: fixed;
+      bottom: 10px;
+      left: 10px;
+      z-index: 50;
+      padding: 0.5em 1em;
+      font-size: 24px;
+      color: red;
+      background-color: #fff;
+      border: none;
+      cursor: pointer;
+      border-radius: 6px;
+      box-shadow: 0 0 4px rgba(0, 0, 0, 0.4);
+    }
+
+    .vp-container {
+      position: fixed;
+      bottom: 10px;
+      right: 10px;
+      z-index: 50;
+      background-color: white;
+      padding: 10px 15px;
+      border-radius: 6px;
+      box-shadow: 0 0 4px rgba(0, 0, 0, 0.4);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .vp-label {
+      font-size: 24px;
+      font-weight: bold;
+      color: #333;
+    }
+
+    .vp-input {
+      font-size: 36px;
+      font-weight: bold;
+      padding: 8px 15px;
+      border: 2px solid #ccc;
+      border-radius: 4px;
+      width: 80px;
+      text-align: center;
+      outline: none;
+    }
+
+    .vp-input:focus {
+      border-color: #007bff;
+    }
+
+    .checkbox-container {
+      position: absolute;
+      right: 20px;
+      top: 20px;
+      z-index: 20;
+      display: flex;
+      gap: 25px;
+      align-items: center;
+      flex-direction: column;
+    }
+
+    .custom-checkbox {
+      width: 80px;
+      height: 80px;
+      border: 6px solid #333;
+      border-radius: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 48px;
+      font-weight: bold;
+      background-color: white;
+      transition: all 0.2s ease;
+    }
+
+    .custom-checkbox.red-target {
+      border-color: #ffa500;
+      position: relative;
+    }
+
+    .custom-checkbox.red-target.checked {
+      background-color: #ffa500;
+      color: white;
+    }
+
+    .target-icon {
+      position: relative;
+      width: 74px;
+      height: 74px;
+      border-radius: 50%;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .target-icon::before {
+      content: '';
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      border: 2px solid currentColor;
+      position: absolute;
+    }
+
+    .target-icon::after {
+      content: '';
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background-color: currentColor;
+      position: absolute;
+    }
+
+    .custom-checkbox.green-check {
+      border-color: #00aa00;
+    }
+
+    .custom-checkbox.green-check.state-0 {
+      background-color: white;
+      color: #00aa00;
+    }
+
+    .custom-checkbox.green-check.state-1 {
+      background-color: #00aa00;
+      color: white;
+    }
+
+    .custom-checkbox.green-check.state-2 {
+      background-color: #00aa00;
+      color: white;
+    }
+
+    .custom-checkbox.green-check.state-3 {
+      background-color: #00aa00;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <!-- Bouton accueil -->
+  <a href="index.html" class="home-btn">
+    <img src="icons/house.png" alt="Accueil" />
+  </a>
+
+  <div class="container" id="drawContainer">
+    <img src="icons/commands.png" alt="Command Orders" class="full-image" />
+    
+    <div style="position: relative;">
+      <img src="season/tactic1.png" alt="Tactic 1" class="full-image" />
+      <div class="checkbox-container">
+        <div class="custom-checkbox red-target" onclick="toggleCustomCheckbox(this, 1, 'target')">
+          <img src="icons/target.png" alt="Target" class="target-icon" />
+        </div>
+        <div class="custom-checkbox green-check state-0" onclick="cycleCheckState(this, 1)">✓</div>
+      </div>
+    </div>
+    
+    <div style="position: relative;">
+      <img src="season/tactic2.png" alt="Tactic 2" class="full-image" />
+      <div class="checkbox-container">
+        <div class="custom-checkbox red-target" onclick="toggleCustomCheckbox(this, 2, 'target')">
+          <img src="icons/target.png" alt="Target" class="target-icon" />
+        </div>
+        <div class="custom-checkbox green-check state-0" onclick="cycleCheckState(this, 2)">✓</div>
+      </div>
+    </div>
+    
+    <div style="position: relative;">
+      <img src="season/tactic3.png" alt="Tactic 3" class="full-image" />
+      <div class="checkbox-container">
+        <div class="custom-checkbox red-target" onclick="toggleCustomCheckbox(this, 3, 'target')">
+          <img src="icons/target.png" alt="Target" class="target-icon" />
+        </div>
+        <div class="custom-checkbox green-check state-0" onclick="cycleCheckState(this, 3)">✓</div>
+      </div>
+    </div>
+    
+    <div style="position: relative;">
+      <img src="season/tactic4.png" alt="Tactic 4" class="full-image" />
+      <div class="checkbox-container">
+        <div class="custom-checkbox red-target" onclick="toggleCustomCheckbox(this, 4, 'target')">
+          <img src="icons/target.png" alt="Target" class="target-icon" />
+        </div>
+        <div class="custom-checkbox green-check state-0" onclick="cycleCheckState(this, 4)">✓</div>
+      </div>
+    </div>
+    
+    <div style="position: relative;">
+      <img src="season/tactic5.png" alt="Tactic 5" class="full-image" />
+      <div class="checkbox-container">
+        <div class="custom-checkbox red-target" onclick="toggleCustomCheckbox(this, 5, 'target')">
+          <img src="icons/target.png" alt="Target" class="target-icon" />
+        </div>
+        <div class="custom-checkbox green-check state-0" onclick="cycleCheckState(this, 5)">✓</div>
+      </div>
+    </div>
+    
+    <div style="position: relative;">
+      <img src="season/tactic6.png" alt="Tactic 6" class="full-image" />
+      <div class="checkbox-container">
+        <div class="custom-checkbox red-target" onclick="toggleCustomCheckbox(this, 6, 'target')">
+          <img src="icons/target.png" alt="Target" class="target-icon" />
+        </div>
+        <div class="custom-checkbox green-check state-0" onclick="cycleCheckState(this, 6)">✓</div>
+      </div>
+    </div>
+    
+    <img src="season/SR.png" alt="SR 25-26" class="full-image" />
+
+    <canvas id="drawCanvas"></canvas>
+  </div>
+
+  <!-- Bouton dessin -->
+  <button class="toggle-draw-btn disabled" onclick="toggleDrawingMode()">
+    <img src="icons/draw.png" alt="Dessin" />
+  </button>
+
+  <!-- Bouton reset (déplacé en bas à gauche) -->
+  <button class="reset-btn" onclick="resetCanvas()">Reset</button>
+
+  <!-- Champ VP (nouveau, en bas à droite) -->
+  <div class="vp-container">
+    <span class="vp-label">VP :</span>
+    <input type="number" class="vp-input" id="vpInput" placeholder="0" />
+  </div>
+
+  <script>
+    const canvas = document.getElementById("drawCanvas");
+    const container = document.getElementById("drawContainer");
+    const ctx = canvas.getContext("2d");
+    let drawing = false;
+    let drawingEnabled = false;
+
+    function resizeCanvas() {
+      canvas.width = container.scrollWidth;
+      canvas.height = container.scrollHeight;
+      canvas.style.width = container.scrollWidth + "px";
+      canvas.style.height = container.scrollHeight + "px";
+      loadDrawing();
+    }
+
+    window.addEventListener("resize", resizeCanvas);
+    window.addEventListener("load", () => {
+      resizeCanvas();
+      loadTacticStates();
+      loadVPValue();
+    });
+
+    function getPos(e) {
+      const rect = canvas.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      return {
+        x: (clientX - rect.left) * (canvas.width / rect.width),
+        y: (clientY - rect.top) * (canvas.height / rect.height),
+      };
+    }
+
+    function startDraw(e) {
+      if (!drawingEnabled || (e.touches && e.touches.length > 1)) return;
+      drawing = true;
+      const pos = getPos(e);
+      ctx.beginPath();
+      ctx.moveTo(pos.x, pos.y);
+      e.preventDefault();
+    }
+
+    function draw(e) {
+      if (!drawingEnabled || !drawing) return;
+      const pos = getPos(e);
+      ctx.lineTo(pos.x, pos.y);
+      ctx.strokeStyle = "red";
+      ctx.lineWidth = 8;
+      ctx.lineCap = "round";
+      ctx.stroke();
+      e.preventDefault();
+    }
+
+    function stopDraw(e) {
+      if (!drawingEnabled || !drawing) return;
+      drawing = false;
+      ctx.closePath();
+      saveDrawing();
+      e.preventDefault();
+    }
+
+    canvas.addEventListener("mousedown", startDraw);
+    canvas.addEventListener("mousemove", draw);
+    canvas.addEventListener("mouseup", stopDraw);
+    canvas.addEventListener("mouseout", stopDraw);
+
+    canvas.addEventListener("touchstart", startDraw, { passive: false });
+    canvas.addEventListener("touchmove", draw, { passive: false });
+    canvas.addEventListener("touchend", stopDraw, { passive: false });
+
+    function toggleDrawingMode() {
+      drawingEnabled = !drawingEnabled;
+      const btn = document.querySelector(".toggle-draw-btn");
+      btn.classList.toggle("disabled", !drawingEnabled);
+    }
+
+    function saveDrawing() {
+      try {
+        const canvasData = {};
+        canvasData.drawing = canvas.toDataURL();
+        const savedData = JSON.parse(localStorage.getItem("tacticData") || "{}");
+        savedData.canvasDrawing = canvasData.drawing;
+        localStorage.setItem("tacticData", JSON.stringify(savedData));
+      } catch (e) {
+        console.warn("Échec de la sauvegarde du dessin", e);
+      }
+    }
+
+    function loadDrawing() {
+      try {
+        const savedData = JSON.parse(localStorage.getItem("tacticData") || "{}");
+        const dataURL = savedData.canvasDrawing;
+        if (dataURL) {
+          const img = new Image();
+          img.onload = () => ctx.drawImage(img, 0, 0);
+          img.src = dataURL;
+        }
+      } catch (e) {
+        console.warn("Échec du chargement du dessin", e);
+      }
+    }
+
+    function cycleCheckState(element, tacticNumber) {
+      // Obtenir l'état actuel
+      let currentState = 0;
+      if (element.classList.contains('state-1')) currentState = 1;
+      else if (element.classList.contains('state-2')) currentState = 2;
+      else if (element.classList.contains('state-3')) currentState = 3;
+      
+      // Calculer le prochain état (cycle 0 -> 1 -> 2 -> 3 -> 0)
+      const nextState = (currentState + 1) % 4;
+      
+      // Supprimer toutes les classes d'état
+      element.classList.remove('state-0', 'state-1', 'state-2', 'state-3');
+      
+      // Ajouter la nouvelle classe d'état et mettre à jour le contenu
+      element.classList.add(`state-${nextState}`);
+      
+      switch(nextState) {
+        case 0:
+          element.textContent = '✓';
+          break;
+        case 1:
+          element.textContent = '1';
+          break;
+        case 2:
+          element.textContent = '2';
+          break;
+        case 3:
+          element.textContent = '3';
+          break;
+      }
+      
+      
+      // Sauvegarder l'état
+      saveCheckState(tacticNumber, nextState);
+    }
+
+    function toggleCustomCheckbox(element, tacticNumber, type) {
+      const isCurrentlyChecked = element.classList.contains('checked');
+      
+      // Décocher l'autre checkbox du même groupe si elle est cochée
+      const container = element.parentElement;
+      const checkCheckbox = container.querySelector('.green-check');
+      
+      
+      // Toggle la checkbox actuelle
+      if (isCurrentlyChecked) {
+        element.classList.remove('checked');
+      } else {
+        element.classList.add('checked');
+      }
+      
+      // Sauvegarder l'état
+      saveTacticState(tacticNumber, type, !isCurrentlyChecked);
+    }
+
+    function saveCheckState(tacticNumber, state) {
+      try {
+        const savedData = JSON.parse(localStorage.getItem("tacticData") || "{}");
+        if (!savedData.tactics) savedData.tactics = {};
+        savedData.tactics[`tactic${tacticNumber}_check_state`] = state;
+        localStorage.setItem("tacticData", JSON.stringify(savedData));
+      } catch (e) {
+        console.warn("Échec de la sauvegarde de l'état du check", e);
+      }
+    }
+
+    function saveTacticState(tacticNumber, type, isChecked) {
+      try {
+        const savedData = JSON.parse(localStorage.getItem("tacticData") || "{}");
+        if (!savedData.tactics) savedData.tactics = {};
+        savedData.tactics[`tactic${tacticNumber}_${type}`] = isChecked;
+        localStorage.setItem("tacticData", JSON.stringify(savedData));
+      } catch (e) {
+        console.warn("Échec de la sauvegarde de l'état des tactiques", e);
+      }
+    }
+
+    function loadTacticStates() {
+      try {
+        const savedData = JSON.parse(localStorage.getItem("tacticData") || "{}");
+        if (savedData.tactics) {
+          for (let i = 1; i <= 6; i++) {
+            const containers = document.querySelectorAll('.checkbox-container');
+            if (containers[i-1]) {
+              const targetCheckbox = containers[i-1].querySelector('.red-target');
+              const checkCheckbox = containers[i-1].querySelector('.green-check');
+              
+              // Charger l'état de la cible
+              if (savedData.tactics[`tactic${i}_target`]) {
+                targetCheckbox.classList.add('checked');
+              }
+              
+              // Charger l'état du check cyclique
+              const checkState = savedData.tactics[`tactic${i}_check_state`] || 0;
+              checkCheckbox.classList.remove('state-0', 'state-1', 'state-2', 'state-3');
+              checkCheckbox.classList.add(`state-${checkState}`);
+              
+              switch(checkState) {
+                case 0:
+                  checkCheckbox.textContent = '✓';
+                  break;
+                case 1:
+                  checkCheckbox.textContent = '1';
+                  break;
+                case 2:
+                  checkCheckbox.textContent = '2';
+                  break;
+                case 3:
+                  checkCheckbox.textContent = '3';
+                  break;
+              }
+            }
+          }
+        }
+      } catch (e) {
+        console.warn("Échec du chargement de l'état des tactiques", e);
+      }
+    }
+
+    function resetCanvas() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      // Reset du champ VP
+      document.getElementById("vpInput").value = "";
+      
+      // Reset des checkboxes vertes (remettre à l'état 0)
+      const greenCheckboxes = document.querySelectorAll('.green-check');
+      greenCheckboxes.forEach(checkbox => {
+        checkbox.classList.remove('state-0', 'state-1', 'state-2', 'state-3');
+        checkbox.classList.add('state-0');
+        checkbox.textContent = '✓';
+      });
+      
+      try {
+        const savedData = JSON.parse(localStorage.getItem("tacticData") || "{}");
+        delete savedData.canvasDrawing;
+        delete savedData.vpValue;
+        // Reset des états des checkboxes vertes
+        if (savedData.tactics) {
+          for (let i = 1; i <= 6; i++) {
+            delete savedData.tactics[`tactic${i}_check_state`];
+          }
+        }
+        localStorage.setItem("tacticData", JSON.stringify(savedData));
+      } catch (e) {
+        console.warn("Échec de la suppression des données de dessin", e);
+      }
+    }
+
+    // Fonctions pour gérer la valeur VP
+    function saveVPValue() {
+      try {
+        const vpValue = document.getElementById("vpInput").value;
+        const savedData = JSON.parse(localStorage.getItem("tacticData") || "{}");
+        savedData.vpValue = vpValue;
+        localStorage.setItem("tacticData", JSON.stringify(savedData));
+      } catch (e) {
+        console.warn("Échec de la sauvegarde de la valeur VP", e);
+      }
+    }
+
+    function loadVPValue() {
+      try {
+        const savedData = JSON.parse(localStorage.getItem("tacticData") || "{}");
+        if (savedData.vpValue !== undefined) {
+          document.getElementById("vpInput").value = savedData.vpValue;
+        }
+      } catch (e) {
+        console.warn("Échec du chargement de la valeur VP", e);
+      }
+    }
+
+    // Sauvegarder la valeur VP quand elle change
+    document.getElementById("vpInput").addEventListener("input", saveVPValue);
+    
+    // Fermer le pavé numérique quand on appuie sur Entrée
+    document.getElementById("vpInput").addEventListener("keydown", function(event) {
+      if (event.key === "Enter") {
+        this.blur(); // Fait perdre le focus, ce qui ferme le pavé numérique
+      }
+    });
+  </script>
+</body>
+</html>

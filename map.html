@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualiseur de Cartes</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+        }
+
+        .map-image {
+            width: 100vw;
+            height: 100vh;
+            object-fit: contain;
+            display: block;
+            background-color: black;
+        }
+
+        .burger-menu {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .burger-button {
+            width: 50px;
+            height: 50px;
+            background: rgba(0, 0, 0, 0.7);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.3s ease;
+        }
+
+        .burger-button:hover {
+            background: rgba(0, 0, 0, 0.9);
+        }
+
+        .burger-line {
+            width: 20px;
+            height: 2px;
+            background: white;
+            transition: all 0.3s ease;
+        }
+
+        .burger-button.active .burger-line:nth-child(1) {
+            transform: rotate(45deg) translate(6px, 6px);
+        }
+
+        .burger-button.active .burger-line:nth-child(2) {
+            opacity: 0;
+        }
+
+        .burger-button.active .burger-line:nth-child(3) {
+            transform: rotate(-45deg) translate(6px, -6px);
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            top: 60px;
+            right: 0;
+            background: rgba(0, 0, 0, 0.9);
+            border-radius: 8px;
+            min-width: 120px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+        }
+
+        .dropdown-menu.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .dropdown-item {
+            padding: 12px 16px;
+            color: white;
+            cursor: pointer;
+            transition: background 0.2s ease;
+            font-size: 14px;
+        }
+
+        .dropdown-item:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .dropdown-item.selected {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .home-btn {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            z-index: 1000;
+            background-color: white;
+            padding: 6px;
+            border-radius: 6px;
+            box-shadow: 0 0 4px rgba(0, 0, 0, 0.4);
+            display: inline-block;
+        }
+
+        .home-btn img {
+            width: 80px;
+            height: 80px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Bouton accueil -->
+    <a href="index.html" class="home-btn">
+        <img src="icons/house.png" alt="Accueil" />
+    </a>
+
+    <img class="map-image" id="mapImage" src="season/map1-1.png" alt="Map">
+
+    <div class="burger-menu">
+        <div class="burger-button" onclick="toggleMenu()">
+            <div class="burger-line"></div>
+            <div class="burger-line"></div>
+            <div class="burger-line"></div>
+        </div>
+        <div class="dropdown-menu" id="dropdownMenu">
+            <div class="dropdown-item selected" onclick="selectMap('map1-1')">Tableau 1 Carte 1</div>
+            <div class="dropdown-item" onclick="selectMap('map1-2')">Tableau 1 Carte 2</div>
+            <div class="dropdown-item" onclick="selectMap('map1-3')">Tableau 1 Carte 3</div>
+            <div class="dropdown-item" onclick="selectMap('map1-4')">Tableau 1 Carte 4</div>
+            <div class="dropdown-item" onclick="selectMap('map1-5')">Tableau 1 Carte 5</div>
+            <div class="dropdown-item" onclick="selectMap('map1-6')">Tableau 1 Carte 6</div>
+            <div class="dropdown-item" onclick="selectMap('map2-1')">Tableau 2 Carte 1</div>
+            <div class="dropdown-item" onclick="selectMap('map2-2')">Tableau 2 Carte 2</div>
+            <div class="dropdown-item" onclick="selectMap('map2-3')">Tableau 2 Carte 3</div>
+            <div class="dropdown-item" onclick="selectMap('map2-4')">Tableau 2 Carte 4</div>
+            <div class="dropdown-item" onclick="selectMap('map2-5')">Tableau 2 Carte 5</div>
+            <div class="dropdown-item" onclick="selectMap('map2-6')">Tableau 2 Carte 6</div>
+        </div>
+    </div>
+
+    <script>
+        let menuOpen = false;
+        let currentMap = 'map1-1';
+
+        // Charger la dernière carte sélectionnée au démarrage
+        function loadLastMap() {
+            const savedMap = localStorage.getItem('selectedMap');
+            if (savedMap) {
+                currentMap = savedMap;
+                const mapImage = document.getElementById('mapImage');
+                mapImage.src = 'season/' + currentMap + '.png';
+                
+                // Mettre à jour la sélection dans le menu
+                document.querySelectorAll('.dropdown-item').forEach(item => {
+                    item.classList.remove('selected');
+                    if (item.textContent.toLowerCase().replace(' ', '') === currentMap.replace('-', '')) {
+                        item.classList.add('selected');
+                    }
+                });
+            }
+        }
+
+        // Sauvegarder la carte sélectionnée
+        function saveCurrentMap(mapName) {
+            localStorage.setItem('selectedMap', mapName);
+        }
+
+        function toggleMenu() {
+            const menu = document.getElementById('dropdownMenu');
+            const button = document.querySelector('.burger-button');
+            
+            menuOpen = !menuOpen;
+            
+            if (menuOpen) {
+                menu.classList.add('active');
+                button.classList.add('active');
+            } else {
+                menu.classList.remove('active');
+                button.classList.remove('active');
+            }
+        }
+
+        function selectMap(mapName) {
+            currentMap = mapName;
+            const mapImage = document.getElementById('mapImage');
+            mapImage.src = 'season/' + mapName + '.png';
+            
+            // Sauvegarder la sélection
+            saveCurrentMap(mapName);
+            
+            // Mettre à jour la sélection
+            document.querySelectorAll('.dropdown-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            event.target.classList.add('selected');
+            
+            // Fermer le menu
+            toggleMenu();
+        }
+
+        // Fermer le menu si on clique ailleurs
+        document.addEventListener('click', function(event) {
+            const burgerMenu = document.querySelector('.burger-menu');
+            if (!burgerMenu.contains(event.target) && menuOpen) {
+                toggleMenu();
+            }
+        });
+
+        // Charger la dernière carte au chargement de la page
+        window.addEventListener('load', loadLastMap);
+    </script>
+</body>
+</html>
