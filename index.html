@@ -151,7 +151,7 @@ html, body {
      border-radius: 0.6em;
    }
    
-   /* Style pour le nom des unités en mode composition */
+   /* Style pour le nom des unitÃ©s en mode composition */
    .unit-name {
      position: absolute;
      top: 50%;
@@ -191,7 +191,7 @@ html, body {
   pointer-events: none;
 }
 
-/* Taille par défaut (1 badge) */
+/* Taille par dÃ©faut (1 badge) */
 .unit-badge {
   width: 120px;
   height: 120px;
@@ -244,6 +244,65 @@ html, body {
      background: rgba(0, 0, 0, 0.7);
      z-index: 1000;
    }
+   
+   #unit-popup-overlay {
+     display: none;
+     justify-content: center;
+     align-items: center;
+     position: fixed;
+     top: 0;
+     left: 0;
+     width: 100vw;
+     height: 100vh;
+     background: rgba(0, 0, 0, 0.85);
+     z-index: 1000;
+   }
+   
+   .unit-popup-content {
+     position: relative;
+     max-width: 90vw;
+     max-height: 90vh;
+     display: flex;
+     justify-content: center;
+     align-items: center;
+   }
+   
+   .unit-popup-content img {
+     max-width: 100%;
+     max-height: 90vh;
+     object-fit: contain;
+     display: block;
+   }
+   
+   .open-full-fiche-btn {
+     position: absolute;
+     top: 10px;
+     right: 10px;
+     width: 50px;
+     height: 50px;
+     background-color: #4CAF50;
+     border: none;
+     border-radius: 10px;
+     color: white;
+     font-size: 2em;
+     font-weight: bold;
+     cursor: pointer;
+     display: flex;
+     align-items: center;
+     justify-content: center;
+     transition: background-color 0.2s, transform 0.1s;
+     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+   }
+   
+   .open-full-fiche-btn:hover {
+     background-color: #45a049;
+     transform: scale(1.05);
+   }
+   
+   .open-full-fiche-btn:active {
+     transform: scale(0.95);
+   }
+   
    .popup-content {
      background: #222;
      padding: 20px;
@@ -309,7 +368,7 @@ html, body {
 </div>
 </div>
 <div class="header-right">
-<button class="drag-toggle" id="dragToggleBtn" onclick="toggleDrag()">Déverrouiller</button>
+<button class="drag-toggle" id="dragToggleBtn" onclick="toggleDrag()">DÃ©verrouiller</button>
 <button class="reset-all" onclick="resetAllData()">Reset Data</button>
 </div>
 </header>
@@ -343,7 +402,7 @@ html, body {
 <img alt="Map" onclick="location.href='map.html'" src="icons/map.png"/>
 </div>
 </div>
-<div class="separator">Armée</div>
+<div class="separator">ArmÃ©e</div>
 <div class="section-rest" id="cardContainer"></div>
 <div id="popup-overlay">
 <div class="popup-content" style="background: #222; padding: 20px; display: flex; flex-direction: column; gap: 20px; border-radius: 0.5em;">
@@ -391,14 +450,37 @@ html, body {
 </div>
 </div>
 </div>
+
+<div id="unit-popup-overlay">
+<div class="unit-popup-content">
+<img id="unit-popup-img" src="" alt="Unit Fiche">
+<button class="open-full-fiche-btn" id="open-full-fiche-btn" title="Ouvrir la fiche complète">+</button>
+</div>
+</div>
+
 <script>
-    let currentTraitTarget = null;
+let currentTraitTarget = null;
 let sortableInstance = null;
 let compositionMode = false;
 let badgeMode = false;
 let currentBadgeTarget = null;
 let currentSpellLore = null;
 let currentManifestation = null;
+let currentUnitPage = null;
+
+function openUnitPopup(imgName, page) {
+ const popup = document.getElementById('unit-popup-overlay');
+ const img = document.getElementById('unit-popup-img');
+ 
+ img.src = `small-fiches/${imgName}`;
+ currentUnitPage = page;
+ popup.style.display = 'flex';
+}
+
+function closeUnitPopup() {
+ document.getElementById('unit-popup-overlay').style.display = 'none';
+ currentUnitPage = null;
+}
 
 window.addEventListener("beforeunload", () => {
  sessionStorage.setItem("scrollPos", window.scrollY);
@@ -441,6 +523,7 @@ function openPopup(target) {
    }
  }
 }
+
 function selectTrait(number) {
  if (currentTraitTarget) {
    const slot = document.getElementById(`battle-slot-${currentTraitTarget}`);
@@ -488,6 +571,7 @@ function selectMonstruous(number) {
  }
  document.getElementById('popup-overlay').style.display = 'none';
 }
+
 function selectBadge(number) {
   if (currentBadgeTarget) {
     let badgesContainer = currentBadgeTarget.querySelector('.badges-container');
@@ -555,6 +639,7 @@ function loadBadges(target) {
     }
   }
 }
+
 function toggleDropdown(id) {
  document.querySelectorAll('.dropdown-panel').forEach(drop => {
    drop.style.display = (drop.id === id && drop.style.display !== 'flex') ? 'flex' : 'none';
@@ -877,9 +962,10 @@ document.addEventListener('DOMContentLoaded', () => {
  
  function createUnitCard(unit, container, isManifestation) {
    const a = document.createElement("a");
-   a.href = unit.page;
+   a.href = "#";
    a.className = "image-button";
    a.dataset.id = unit.id;
+   a.dataset.page = unit.page;
    
    if (isManifestation) {
      a.classList.add('manifestation-unit');
@@ -900,14 +986,17 @@ document.addEventListener('DOMContentLoaded', () => {
    }
    
    a.addEventListener("click", e => {
+     e.preventDefault();
+     
      if (compositionMode && !isManifestation) {
-       e.preventDefault();
        const isInactive = a.classList.toggle("inactive-card");
        localStorage.setItem("visible-" + unit.id, isInactive ? "0" : "1");
      } else if (badgeMode) {
-       e.preventDefault();
        currentBadgeTarget = a;
        openPopup('badge');
+     } else {
+       // Mode normal : ouvrir la pop-up avec la fiche simplifiée
+       openUnitPopup(unit.img, unit.page);
      }
    });
    
@@ -1026,6 +1115,14 @@ document.addEventListener('DOMContentLoaded', () => {
  
  updateManifestationCards();
  loadCardOrder();
+ 
+ // Event listener pour le bouton "+" d'ouverture de la fiche complète
+ document.getElementById('open-full-fiche-btn').addEventListener('click', (e) => {
+   e.stopPropagation();
+   if (currentUnitPage) {
+     window.location.href = currentUnitPage;
+   }
+ });
 });
 
 document.addEventListener('click', (e) => {
@@ -1044,6 +1141,10 @@ document.addEventListener('click', (e) => {
    }
    e.target.style.display = 'none';
  }
+ 
+ if (e.target.id === 'unit-popup-overlay') {
+   closeUnitPopup();
+ }
 });
 
 if (sessionStorage.getItem('returnToRest')) {
@@ -1053,4 +1154,6 @@ if (sessionStorage.getItem('returnToRest')) {
    sessionStorage.removeItem('returnToRest');
  }
 }
-</script>  
+</script>
+</body>
+</html>
