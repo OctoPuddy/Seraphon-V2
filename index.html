@@ -703,7 +703,7 @@ function toggleDrag() {
  if (sortableInstance) {
    sortableInstance.destroy();
    sortableInstance = null;
-   button.textContent = "Déverrouiller";
+   button.textContent = "Unlock";
    button.classList.remove("active");
  } else {
    sortableInstance = new Sortable(container, {
@@ -746,7 +746,7 @@ function toggleCompositionMode() {
    if (sortableInstance) {
      sortableInstance.destroy();
      sortableInstance = null;
-     document.getElementById('dragToggleBtn').textContent = "Déverrouiller";
+     document.getElementById('dragToggleBtn').textContent = "Unlock";
      document.getElementById('dragToggleBtn').classList.remove("active");
    }
    
@@ -797,7 +797,7 @@ function toggleBadgeMode() {
    if (sortableInstance) {
      sortableInstance.destroy();
      sortableInstance = null;
-     document.getElementById('dragToggleBtn').textContent = "Déverrouiller";
+     document.getElementById('dragToggleBtn').textContent = "Unlock";
      document.getElementById('dragToggleBtn').classList.remove("active");
    }
  } else {
