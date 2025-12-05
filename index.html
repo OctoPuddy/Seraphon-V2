@@ -961,9 +961,9 @@ document.addEventListener('DOMContentLoaded', () => {
  const container = document.getElementById("cardContainer");
  
  function createUnitCard(unit, container, isManifestation) {
-   const a = document.createElement("a");
-   a.href = "#";
-   a.className = "image-button";
+  const a = document.createElement("div");
+  a.className = "image-button";
+  a.style.cursor = "pointer";
    a.dataset.id = unit.id;
    a.dataset.page = unit.page;
    
@@ -985,8 +985,8 @@ document.addEventListener('DOMContentLoaded', () => {
      if (visible === "0" || visible === null) a.classList.add("hidden-card");
    }
    
-   a.addEventListener("click", e => {
-     e.preventDefault();
+  a.addEventListener("click", e => {
+    e.stopPropagation();
      
      if (compositionMode && !isManifestation) {
        const isInactive = a.classList.toggle("inactive-card");
